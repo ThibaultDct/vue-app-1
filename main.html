@@ -227,6 +227,7 @@ var demo = new Vue({
                 try {
                     const response = await axios.get(championsMpApiURL + this.id + "?api_key=" + apiKey)
                     console.log(response.data)
+                    this.championsMp = []
                     response.data.forEach(element => {
                         this.championsMp.push(element)
                     })
@@ -237,8 +238,11 @@ var demo = new Vue({
                 }
             }
         },
+
+        // PROBLEME : Les variables points et nom sont undefined tout le temps, sans savoir pourquoi
         filterChampions: function () {
             console.log(this.champions)
+            this.filteredChampions = []
             for (var i in this.championsMp){
                 var nom = this.findChampionById(this.championsMp[i].championId)
                 var points = this.championsMp[i].championsPoints
