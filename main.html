@@ -91,6 +91,12 @@
         max-width: 100px;
     }
 
+    .championsList {
+        background-color: #242424;
+        border-radius: 10px;
+        list-style: none;
+    }
+
     </style>
 
 </head>
@@ -113,6 +119,13 @@
             </div>
         </div>
         <div class="totalMasteries">Points de maîtrise : <div class="mpValue">{{ totalMp }}</div></div>
+        <div>
+            <ul class="championsList">
+                <li v-for="champion in finalChampions">
+                    {{ champion }}
+                </li>
+            </ul>
+        </div>
     </div>
 
 
@@ -126,7 +139,9 @@ const apiKey = 'RGAPI-046e1cef-6a1a-4ad2-b8a7-f31b556550cf';
 const apiURL = 'https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
 const apiTotalMpURL = 'https://euw1.api.riotgames.com/lol/champion-mastery/v4/scores/by-summoner/';
 const profilePictureApiURL = 'http://ddragon.leagueoflegends.com/cdn/11.1.1/img/profileicon/';
-const championsApiURL = 'http://ddragon.leagueoflegends.com/cdn/6.24.1/data/fr_FR/champion.json';
+const championsApiURL = 'http://ddragon.leagueoflegends.com/cdn/11.1.1/data/fr_FR/champion.json';
+const championsMpApiURL = 'https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/';
+const championImgURL = 'http://ddragon.leagueoflegends.com/cdn/5.9.1/img/champion/';
 
 var demo = new Vue({
 
@@ -134,54 +149,38 @@ var demo = new Vue({
 	el: '#main',
 
 	// Define properties and give them initial values.
-	data: {
-        active: false,
-        pseudo: '',
-        id: '',
-        accountId: '',
-        summonerLevel: 0,
-        puuid: '',
-        image: '',
-        totalMp: 0,
-        champions: []
+	data: function () {
+        return {
+            active: false,
+            pseudo: '',
+            id: '',
+            accountId: '',
+            summonerLevel: 0,
+            puuid: '',
+            image: '',
+            totalMp: 0,
+            champions: [],
+            championsMp: [],
+            filteredChampions: [],
+            finalChampions: [],
+        }
     },
 
-    created: {
-        loadChampionsData: async function () {
-            try {
-                const response = await axios.get(championsApiURL)
-                console.log(response)
-                // response.forEach(element => {
-                //     this.champions.push(element)
-                // });
-                // console.log(this.champions)
-            } catch (error) {
-                console.log(error);
+    async created() {
+        try {
+            const response = await axios.get(championsApiURL)
+            console.log(response)
+            for (const [key, value] of Object.entries(response.data.data)){
+                this.champions.push({key, value})
             }
-        } (),
+            console.log(this.champions)
+        } catch (error) {
+            console.log(error);
+        }
     },
     
     computed: {
-        loadMpData: async function () {
-            if (this.active){
-                try {
-                    const response = await axios.get(apiTotalMpURL + this.id, {
-                        headers: {
-                            "X-Riot-Token": apiKey,
-                            "Access-Control-Allow-Origin": "*",
-                            "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE, PUT",
-                            "Access-Control-Allow-Headers": "append,delete,entries,foreach,get,has,keys,set,values,Authorization",
-                            "Access-Control-Allow-Credentials" : "true"
-                        }
-                    })
-                    console.log(response.data)
-                    this.totalMp = response.data
-                    console.log(this.puuid)
-                } catch (error) {
-                    console.log(error);
-                }
-            }
-        },
+        
     },
 
 	// Functions we will be using.
@@ -196,10 +195,58 @@ var demo = new Vue({
                 this.accountId = response.data.accountId
                 this.active = true
                 this.image = profilePictureApiURL + response.data.profileIconId + ".png"
+                this.active = true
+                this.loadMpData()
+                this.loadMpChampions()
                 console.log(this.puuid)
             } catch (error) {
 				console.log(error);
 			}
+        },
+        findChampionById(id) {
+            this.champions.forEach(champion => {
+                if (parseInt(champion.value.key) === id) {
+                    console.log("Trouvé : " + champion.value.id)
+                    return champion.value.id
+                }
+            })
+        },
+        loadMpData: async function () {
+            if (this.active) {
+                try {
+                    const response = await axios.get(apiTotalMpURL + this.id + "?api_key=" + apiKey)
+                    console.log(response.data)
+                    this.totalMp = response.data
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        },
+        loadMpChampions: async function () {
+            if (this.active){
+                try {
+                    const response = await axios.get(championsMpApiURL + this.id + "?api_key=" + apiKey)
+                    console.log(response.data)
+                    response.data.forEach(element => {
+                        this.championsMp.push(element)
+                    })
+                    this.filterChampions()
+                    this.finalChampions = this.filteredChampions
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        },
+        filterChampions: function () {
+            console.log(this.champions)
+            for (var i in this.championsMp){
+                var nom = this.findChampionById(this.championsMp[i].championId)
+                var points = this.championsMp[i].championsPoints
+                console.log(nom + " " + points)
+                this.filteredChampions.push({nom, points})
+            }
+            console.log(this.filteredChampions)
+            return this.filteredChampions
         },
 	},
 });
