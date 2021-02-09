@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vue.js Navigation Menu</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+
+    <style>
+
+    /* Hide un-compiled mustache bindings
+    until the Vue instance is ready */
+       [v-cloak] {   display: none;
+    }
+
+	*{
+		margin:10px;
+		padding:10px;
+	}
+
+	body{
+		font-family: 'Montserrat', sans-serif;
+		color: white;
+        background-color: #242424;
+		text-align:center;
+	}
+
+	a, a:visited {
+		outline:none;
+		color:#389dc1;
+	}
+
+	a:hover{
+		text-decoration:none;
+	}
+
+	section, footer, header, aside, nav{
+		display: block;
+	}
+
+    input {
+        border-radius: 10px;
+        border-width: 1px;
+        border-color: white;
+        font-weight: bold;
+    }
+
+    input:hover {
+        border-width: 1px;
+        border-color: #389dc1;
+    }
+
+    .validButton {
+        color: white;
+        font-weight: bold;
+        background-color: #389dc1;
+        border-radius: 10px;
+        max-width: 5%;
+        cursor: pointer;
+    }
+
+    .content {
+        background-color: #5e5b64;
+        border-radius: 10px;
+    }
+
+    .profile {
+        background-color: rgb(150, 165, 233);
+        border-radius: 10px;
+        display: flex;
+    }
+
+    .profilePicture {
+        border-radius: 100%;
+        border-width: 20px;
+        border-color: white;
+        width: 150px;
+        height: 150px;
+        display: inline-block;
+    }
+
+    .mpValue {
+        border-radius: 5px;
+        background-color: #444346;
+        color: #dfab01;
+        font-weight: bold;
+        font-size: 2em;
+        max-width: 150px;
+    }
+
+    .championsList {
+        background-color: #242424;
+        border-radius: 10px;
+        list-style: none;
+    }
+
+    .listContent {
+        background-color: rgb(150, 165, 233);
+    }
+
+    .listContent .name {
+        display: inline-block;
+        font-weight: bold;
+    }
+
+    .listContent .points {
+        color: #dfab01;
+        display: inline-block;
+        background-color: #444346;
+        border-radius: 1em;
+        font-weight: bold;
+    }
+
+    </style>
+
+</head>
+<body>
+
+<div id="main">
+
+	<!-- The navigation menu will get the value of the "active" variable as a class. -->
+    <!-- To stops the page from jumping when a link is clicked we use the "prevent" modifier (short for preventDefault). -->
+    <h1>Summoner Mastery Points</h1>
+    <input type="text" v-model="pseudo" placeholder="Nom d'invocateur" />
+    <button @click='getSummonerInfos' class='validButton'>Valider</button>
+
+    <div v-if="active" class="content">
+        <div class="profile">
+            <img :src="image" class="profilePicture" />
+            <div>
+                <h1 color="white">{{ pseudo }}</h1>
+                <div class="mpValue">Niv. {{ summonerLevel }}</div>
+            </div>
+        </div>
+        <div class="totalMasteries">Points de maîtrise : <div class="mpValue">{{ totalMp }}</div></div>
+        <div>
+            <ul class="championsList">
+                <li v-for="champion in finalChampions" class="listContent">
+                    <div class="name">{{ champion.nom }}</div><div class="points">{{ champion.points }}</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.0.5/vue.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+
+const apiKey = 'RGAPI-2c6d359c-bcfe-4524-8b8b-4c8b069b30a7';
+const apiURL = 'https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
+const apiTotalMpURL = 'https://euw1.api.riotgames.com/lol/champion-mastery/v4/scores/by-summoner/';
+const profilePictureApiURL = 'http://ddragon.leagueoflegends.com/cdn/11.1.1/img/profileicon/';
+const championsApiURL = 'http://ddragon.leagueoflegends.com/cdn/11.1.1/data/fr_FR/champion.json';
+const championsMpApiURL = 'https://euw1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-summoner/';
+const championImgURL = 'http://ddragon.leagueoflegends.com/cdn/5.9.1/img/champion/';
+
+var demo = new Vue({
+
+	// A DOM element to mount our view model.
+	el: '#main',
+
+	// Define properties and give them initial values.
+	data: function () {
+        return {
+            active: false,
+            pseudo: '',
+            id: '',
+            accountId: '',
+            summonerLevel: 0,
+            puuid: '',
+            image: '',
+            totalMp: 0,
+            champions: [],
+            championsMp: [],
+            filteredChampions: [],
+            finalChampions: [],
+        }
+    },
+
+    async created() {
+        try {
+            const response = await axios.get(championsApiURL)
+            console.log(response)
+            for (const [key, value] of Object.entries(response.data.data)){
+                this.champions.push({key, value})
+            }
+            console.log(this.champions)
+        } catch (error) {
+            console.log(error);
+        }
+    },
+    
+    computed: {
+        
+    },
+
+	// Functions we will be using.
+	methods: {
+        getSummonerInfos: async function () {
+            try {
+                const response = await axios.get(apiURL + this.pseudo + "?api_key=" + apiKey)
+                console.log(response.data)
+                this.puuid = response.data.puuid
+                this.id = response.data.id
+                this.summonerLevel = response.data.summonerLevel
+                this.accountId = response.data.accountId
+                this.active = true
+                this.image = profilePictureApiURL + response.data.profileIconId + ".png"
+                this.active = true
+                this.loadMpData()
+                this.loadMpChampions()
+                console.log(this.puuid)
+            } catch (error) {
+				console.log(error);
+			}
+        },
+        findChampionById(id) {
+            var champion = this.champions.find(champion => parseInt(champion.value.key) === id)
+            if (champion && champion.value){
+                return champion.value.id
+            } else {
+                return "Undefined champion"
+            }
+        },
+        loadMpData: async function () {
+            if (this.active) {
+                try {
+                    const response = await axios.get(apiTotalMpURL + this.id + "?api_key=" + apiKey)
+                    console.log(response.data)
+                    this.totalMp = response.data
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        },
+        loadMpChampions: async function () {
+            if (this.active){
+                try {
+                    const response = await axios.get(championsMpApiURL + this.id + "?api_key=" + apiKey)
+                    console.log(response.data)
+                    this.championsMp = []
+                    response.data.forEach(element => {
+                        this.championsMp.push(element)
+                    })
+                    this.filterChampions()
+                    this.finalChampions = this.filteredChampions
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        },
+
+        // PROBLEME : Les variables points et nom sont undefined tout le temps, sans savoir pourquoi
+        filterChampions: function () {
+            console.log(this.champions)
+            this.filteredChampions = []
+            for (var i in this.championsMp){
+                var nom = this.findChampionById(this.championsMp[i].championId)
+                var points = this.championsMp[i].championPoints
+                console.log(nom + " " + points)
+                this.filteredChampions.push({nom, points})
+            }
+            console.log(this.filteredChampions)
+            return this.filteredChampions
+        },
+	},
+});
+</script>
+</body>
+</html>
