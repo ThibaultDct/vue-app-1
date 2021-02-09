@@ -204,14 +204,12 @@ var demo = new Vue({
 			}
         },
         findChampionById(id) {
-            // this.champions.forEach(champion => {
-            //     if (parseInt(champion.value.key) === id) {
-            //         console.log("Trouvé : " + champion.value.id)
-            //         return champion.value.id
-            //     }
-            // })
             var champion = this.champions.find(champion => parseInt(champion.value.key) === id)
-            return champion.value.id
+            if (champion && champion.value){
+                return champion.value.id
+            } else {
+                return "Undefined champion"
+            }
         },
         loadMpData: async function () {
             if (this.active) {
