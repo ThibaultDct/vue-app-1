@@ -88,13 +88,30 @@
         color: #dfab01;
         font-weight: bold;
         font-size: 2em;
-        max-width: 100px;
+        max-width: 150px;
     }
 
     .championsList {
         background-color: #242424;
         border-radius: 10px;
         list-style: none;
+    }
+
+    .listContent {
+        background-color: rgb(150, 165, 233);
+    }
+
+    .listContent .name {
+        display: inline-block;
+        font-weight: bold;
+    }
+
+    .listContent .points {
+        color: #dfab01;
+        display: inline-block;
+        background-color: #444346;
+        border-radius: 1em;
+        font-weight: bold;
     }
 
     </style>
@@ -115,14 +132,14 @@
             <img :src="image" class="profilePicture" />
             <div>
                 <h1 color="white">{{ pseudo }}</h1>
-                <div class="mpValue">{{ summonerLevel }}</div>
+                <div class="mpValue">Niv. {{ summonerLevel }}</div>
             </div>
         </div>
         <div class="totalMasteries">Points de maîtrise : <div class="mpValue">{{ totalMp }}</div></div>
         <div>
             <ul class="championsList">
-                <li v-for="champion in finalChampions">
-                    {{ champion }}
+                <li v-for="champion in finalChampions" class="listContent">
+                    <div class="name">{{ champion.nom }}</div><div class="points">{{ champion.points }}</div>
                 </li>
             </ul>
         </div>
