@@ -135,7 +135,7 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
 
-const apiKey = 'RGAPI-046e1cef-6a1a-4ad2-b8a7-f31b556550cf';
+const apiKey = 'RGAPI-2c6d359c-bcfe-4524-8b8b-4c8b069b30a7';
 const apiURL = 'https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
 const apiTotalMpURL = 'https://euw1.api.riotgames.com/lol/champion-mastery/v4/scores/by-summoner/';
 const profilePictureApiURL = 'http://ddragon.leagueoflegends.com/cdn/11.1.1/img/profileicon/';
@@ -204,12 +204,14 @@ var demo = new Vue({
 			}
         },
         findChampionById(id) {
-            this.champions.forEach(champion => {
-                if (parseInt(champion.value.key) === id) {
-                    console.log("Trouvé : " + champion.value.id)
-                    return champion.value.id
-                }
-            })
+            // this.champions.forEach(champion => {
+            //     if (parseInt(champion.value.key) === id) {
+            //         console.log("Trouvé : " + champion.value.id)
+            //         return champion.value.id
+            //     }
+            // })
+            var champion = this.champions.find(champion => parseInt(champion.value.key) === id)
+            return champion.value.id
         },
         loadMpData: async function () {
             if (this.active) {
@@ -245,7 +247,7 @@ var demo = new Vue({
             this.filteredChampions = []
             for (var i in this.championsMp){
                 var nom = this.findChampionById(this.championsMp[i].championId)
-                var points = this.championsMp[i].championsPoints
+                var points = this.championsMp[i].championPoints
                 console.log(nom + " " + points)
                 this.filteredChampions.push({nom, points})
             }
